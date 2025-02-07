@@ -2,5 +2,5 @@
 host=review.circlecat.org
 port=29418
 scheme=ssh
-project=flask-bazel-template
+project=purrf
 defaultbranch=main
