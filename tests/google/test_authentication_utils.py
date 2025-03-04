@@ -4,6 +4,7 @@ import logging
 from tools.log.logger import setup_logger
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from google.oauth2.credentials import Credentials as UserCredentials
+from google.cloud.pubsub_v1 import SubscriberClient
 from io import StringIO
 from google.constants import (
     CHAT_API_NAME,
@@ -37,6 +38,7 @@ class TestExceptionHandler(unittest.TestCase):
         GoogleClientFactory._credentials = None
         GoogleClientFactory._chat_client = None
         GoogleClientFactory._people_client = None
+        GoogleClientFactory._subscriber_client = None
 
     def tearDown(self):
         logging.getLogger().handlers = []
@@ -293,6 +295,23 @@ class TestExceptionHandler(unittest.TestCase):
         self.assertEqual(
             log_output.count(SERVICE_CREATED_MSG.format(api_name=PEOPLE_API_NAME)), 1
         )
+
+    @patch("google.authentication_utils.SubscriberClient")
+    def test_create_subscriber_client_success(self, mock_subscriber_client):
+        mock_client_instance = Mock()
+        mock_subscriber_client.return_value = mock_client_instance
+
+        from google.authentication_utils import GoogleClientFactory
+
+        factory = GoogleClientFactory()
+
+        result = factory.create_subscriber_client()
+
+        self.assertEqual(result, mock_client_instance)
+        mock_subscriber_client.assert_called_once()
+        second_result = factory.create_subscriber_client()
+        self.assertEqual(second_result, mock_client_instance)
+        self.assertEqual(mock_subscriber_client.call_count, 1)
 
 
 if __name__ == "__main__":
