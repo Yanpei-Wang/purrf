@@ -28,11 +28,7 @@ py_binary(
     srcs = ["app.py"],
     main = "app.py",
     deps = [
-        "//google:authentication_utils",
-        "//google:chat_utils",
-        "//google:fetch_history_chat_message",
-        "//tools/global_handle_exception:exception_handler",
-        "//tools/log",
+        "//google:google_api",
         "@pypi//flask",
     ],
 )

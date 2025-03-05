@@ -1,6 +1,5 @@
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@rules_python//python:defs.bzl", "py_library")
 
-# package(default_visibility = ["//purrf:__subpackages__"])
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -43,14 +42,14 @@ py_library(
 )
 
 py_library(
-    name = "pubsub_publisher",
-    srcs = [
-        "pubsub_publisher.py",
-    ],
+    name = "google_api",
+    srcs = ["google_api.py"],
     deps = [
-        "//google:authentication_utils",
+        "fetch_history_chat_message",
+        ":authentication_utils",
+        ":chat_utils",
+        "//tools/global_handle_exception:exception_handler",
         "//tools/log",
-        "@pypi//google_api_python_client",
-        "@pypi//google_cloud_pubsub",
+        "@pypi//flask",
     ],
 )

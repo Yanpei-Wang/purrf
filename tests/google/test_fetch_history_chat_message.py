@@ -1,4 +1,4 @@
-import unittest
+from unittest import TestCase, main
 from unittest.mock import Mock, patch
 import logging
 from io import StringIO
@@ -47,7 +47,11 @@ MOCK_MESSAGES_RESPONSE = {
 }
 
 
+<<<<<<< HEAD
 class TestChatUtils(unittest.TestCase):
+=======
+class TestChatUtils(TestCase):
+>>>>>>> ae59e6c ([PUR-7] Implement Google chat history message storage)
     def setUp(self):
         self.log_capture_string = StringIO()
         ch = logging.StreamHandler(self.log_capture_string)
@@ -179,4 +183,4 @@ class TestChatUtils(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

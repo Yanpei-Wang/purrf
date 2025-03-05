@@ -123,9 +123,3 @@ def fetch_history_messages():
             stored_count=stored_count, total_count=len(messages)
         )
     )
-
-
-def get_all_chat_spaces():
-    client_chat = GoogleClientFactory().create_chat_client()
-    space_id_list = get_chat_spaces(client_chat, DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE)
-    return space_id_list

@@ -25,12 +25,3 @@ py_test(
         "//google:fetch_history_chat_message",
     ],
 )
-
-py_test(
-    name = "test_pubsub_publisher",
-    srcs = ["test_pubsub_publisher.py"],
-    deps = [
-        "//google:fetch_history_chat_message",
-        "//google:pubsub_publisher",
-    ],
-)
