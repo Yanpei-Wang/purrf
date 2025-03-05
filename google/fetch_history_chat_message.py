@@ -19,7 +19,7 @@ from google.constants import (
 setup_logger()
 
 
-def fetch_messages_by_spaces_id(client_chat, space_id):
+def fetch_messages_by_spaces_id(space_id):
     """
     Retrieves messages from a specific Google Chat space.
 
@@ -33,7 +33,6 @@ def fetch_messages_by_spaces_id(client_chat, space_id):
     4.  Logs the number of messages retrieved.
 
     Args:
-        client_chat (googleapiclient.discovery.Resource): A Google Chat API client.
         space_id (str): The ID of the Google Chat space to fetch messages from.
 
     Returns:
@@ -45,7 +44,7 @@ def fetch_messages_by_spaces_id(client_chat, space_id):
         KeyError: If the expected data structure is not present in the API response.
         ValueError: If no valid chat client provided.
     """
-
+    client_chat = GoogleClientFactory().create_chat_client()
     if not client_chat:
         raise ValueError(NO_CLIENT_ERROR_MSG.format(client_name=CHAT_API_NAME))
 
@@ -87,27 +86,15 @@ def fetch_history_messages():
         c.  Stores the message in Redis using the 'store_messages' function.
     6.  Logs the number of messages fetched and successfully stored.
 
-    Args:
-        GoogleClientFactory (class): A factory class providing Google API clients.
-        get_chat_spaces (function): Retrieves a dictionary of chat space IDs.
-            Takes a chat client, a type identifier (e.g., "SPACE"), and a limit.
-        fetch_messages_by_spaces_id (function): Fetches messages for a given space ID.
-            Takes a chat client and a space ID.
-        list_directory_all_people_ldap (function): Retrieves a dictionary mapping sender IDs to LDAP identifiers.
-            Takes a people client.
-        store_messages (function): Stores a message in Redis.
-            Takes a sender LDAP, a message object, and a message type.
-
     Returns:
         None.
     """
-
     messages = []
 
-    space_id_list = get_chat_spaces( DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE)
+    space_id_list = get_chat_spaces(DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE)
 
     for space_id in space_id_list.keys():
-        result = fetch_messages_by_spaces_id( space_id)
+        result = fetch_messages_by_spaces_id(space_id)
         messages.extend(result)
         logging.debug(
             FETCHED_MESSAGES_INFO_MSG.format(count=len(result), space_id=space_id)

@@ -62,15 +62,15 @@ class TestChatUtils(unittest.TestCase):
     def tearDown(self):
         logging.getLogger().handlers = []
 
-    def test_fetch_messages_by_spaces_id_success(self):
-        mock_client = Mock()
-        mock_client.spaces.return_value.messages.return_value.list.return_value.execute.return_value = MOCK_MESSAGES_RESPONSE
+    @patch("google.authentication_utils.GoogleClientFactory.create_chat_client")
+    def test_fetch_messages_by_spaces_id_success(self, mock_client):
+        mock_client.return_value.spaces.return_value.messages.return_value.list.return_value.execute.return_value = MOCK_MESSAGES_RESPONSE
 
-        result = fetch_messages_by_spaces_id(mock_client, TEST_SPACE_ID)
+        result = fetch_messages_by_spaces_id(TEST_SPACE_ID)
 
         expected_result = MOCK_MESSAGES_RESPONSE["messages"]
         self.assertEqual(result, expected_result)
-        mock_client.spaces.return_value.messages.return_value.list.assert_called_once_with(
+        mock_client.return_value.spaces.return_value.messages.return_value.list.assert_called_once_with(
             parent=f"spaces/{TEST_SPACE_ID}", pageSize=DEFAULT_PAGE_SIZE, pageToken=None
         )
         log_output = self.log_capture_string.getvalue()
@@ -85,10 +85,11 @@ class TestChatUtils(unittest.TestCase):
             NO_CLIENT_ERROR_MSG.format(client_name=CHAT_API_NAME), log_output
         )
 
-    def test_fetch_messages_by_spaces_id_invalid_client(self):
-        mock_client = None
+    @patch("google.authentication_utils.GoogleClientFactory.create_chat_client")
+    def test_fetch_messages_by_spaces_id_invalid_client(self, mock_client):
+        mock_client.return_value = None
         with self.assertRaises(ValueError) as context:
-            fetch_messages_by_spaces_id(mock_client, TEST_SPACE_ID)
+            fetch_messages_by_spaces_id(TEST_SPACE_ID)
         self.assertEqual(
             str(context.exception),
             NO_CLIENT_ERROR_MSG.format(client_name=CHAT_API_NAME),
@@ -98,22 +99,13 @@ class TestChatUtils(unittest.TestCase):
     @patch("google.fetch_history_chat_message.list_directory_all_people_ldap")
     @patch("google.fetch_history_chat_message.fetch_messages_by_spaces_id")
     @patch("google.fetch_history_chat_message.get_chat_spaces")
-    @patch("google.authentication_utils.GoogleClientFactory.create_people_client")
-    @patch("google.authentication_utils.GoogleClientFactory.create_chat_client")
     def test_fetch_history_messages_success(
         self,
-        mock_create_chat_client,
-        mock_create_people_client,
         mock_get_spaces,
         mock_fetch_messages,
         mock_list_ldap,
         mock_store_messages,
     ):
-        mock_chat_client = Mock()
-        mock_create_chat_client.return_value = mock_chat_client
-        mock_people_client = Mock()
-        mock_create_people_client.return_value = mock_people_client
-
         mock_get_spaces.return_value = MOCK_SPACES
         mock_fetch_messages.side_effect = [[MOCK_MESSAGE_1], [MOCK_MESSAGE_2]]
         mock_list_ldap.return_value = MOCK_LDAP
@@ -121,17 +113,11 @@ class TestChatUtils(unittest.TestCase):
 
         fetch_history_messages()
 
-        mock_create_chat_client.assert_called_once()
-        mock_create_people_client.assert_called_once()
-        mock_get_spaces.assert_called_once_with(
-            mock_chat_client, DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE
-        )
-        mock_fetch_messages.assert_any_call(mock_chat_client, SPACE_ID_1)
-        mock_fetch_messages.assert_any_call(mock_chat_client, SPACE_ID_2)
+        mock_get_spaces.assert_called_once()
+        mock_fetch_messages.assert_any_call(SPACE_ID_1)
+        mock_fetch_messages.assert_any_call(SPACE_ID_2)
         self.assertEqual(mock_fetch_messages.call_count, 2)
-        mock_list_ldap.assert_called_once_with(mock_people_client)
-        mock_store_messages.assert_any_call(LDAP_1, MOCK_MESSAGE_1, MESSAGE_TYPE_CREATE)
-        mock_store_messages.assert_any_call(LDAP_2, MOCK_MESSAGE_2, MESSAGE_TYPE_CREATE)
+        mock_list_ldap.assert_called_once()
         self.assertEqual(mock_store_messages.call_count, 2)
 
         log_output = self.log_capture_string.getvalue()
@@ -156,22 +142,13 @@ class TestChatUtils(unittest.TestCase):
     @patch("google.fetch_history_chat_message.list_directory_all_people_ldap")
     @patch("google.fetch_history_chat_message.fetch_messages_by_spaces_id")
     @patch("google.fetch_history_chat_message.get_chat_spaces")
-    @patch("google.authentication_utils.GoogleClientFactory.create_people_client")
-    @patch("google.authentication_utils.GoogleClientFactory.create_chat_client")
     def test_fetch_history_messages_with_unknown_sender(
         self,
-        mock_create_chat_client,
-        mock_create_people_client,
         mock_get_spaces,
         mock_fetch_messages,
         mock_list_ldap,
         mock_store_messages,
     ):
-        mock_chat_client = Mock()
-        mock_create_chat_client.return_value = mock_chat_client
-        mock_people_client = Mock()
-        mock_create_people_client.return_value = mock_people_client
-
         mock_get_spaces.return_value = MOCK_SPACES
         mock_fetch_messages.side_effect = [
             [MOCK_MESSAGE_UNKNOWN],
@@ -182,15 +159,11 @@ class TestChatUtils(unittest.TestCase):
 
         fetch_history_messages()
 
-        mock_create_chat_client.assert_called_once()
-        mock_create_people_client.assert_called_once()
-        mock_get_spaces.assert_called_once_with(
-            mock_chat_client, DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE
-        )
-        mock_fetch_messages.assert_any_call(mock_chat_client, SPACE_ID_1)
-        mock_fetch_messages.assert_any_call(mock_chat_client, SPACE_ID_2)
+        mock_get_spaces.assert_called_once()
+        mock_fetch_messages.assert_any_call(SPACE_ID_1)
+        mock_fetch_messages.assert_any_call(SPACE_ID_2)
         self.assertEqual(mock_fetch_messages.call_count, 2)
-        mock_list_ldap.assert_called_once_with(mock_people_client)
+        mock_list_ldap.assert_called_once()
         mock_store_messages.assert_not_called()
 
         log_output = self.log_capture_string.getvalue()

@@ -44,6 +44,19 @@ py_library(
     ],
 )
 
+py_binary(
+    name = "google_api",
+    srcs = ["google_api.py"],
+    deps = [
+        "fetch_history_chat_message",
+        ":authentication_utils",
+        ":chat_utils",
+        "//tools/global_handle_exception:exception_handler",
+        "//tools/log",
+        "@pypi//flask",
+    ],
+)
+
 py_library(
     name = "pubsub_publisher",
     srcs = [
@@ -54,19 +67,5 @@ py_library(
         "//tools/log",
         "@pypi//google_api_python_client",
         "@pypi//google_cloud_pubsub",
-    ],
-)
-
-py_binary(
-    name = "google_api",
-    srcs = ["google_api.py"],
-    deps = [
-        "fetch_history_chat_message",
-        ":authentication_utils",
-        ":pubsub_publisher",
-        ":chat_utils",
-        "//tools/global_handle_exception:exception_handler",
-        "//tools/log",
-        "@pypi//flask",
     ],
 )

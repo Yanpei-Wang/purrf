@@ -30,5 +30,6 @@ py_test(
     srcs = ["test_pubsub_publisher.py"],
     deps = [
         "//google:pubsub_publisher",
+        "//google:fetch_history_chat_message",
     ],
 )
