@@ -3,6 +3,7 @@ from google.auth import default
 from google.cloud.pubsub_v1 import SubscriberClient
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from google.oauth2.credentials import Credentials as UserCredentials
+from google.cloud.pubsub_v1 import PublisherClient
 from tools.log.logger import setup_logger
 from google.constants import (
     CHAT_API_NAME,
@@ -44,6 +45,7 @@ class GoogleClientFactory:
     _chat_client = None
     _people_client = None
     _subscriber_client = None
+    _publisher_client = None
 
     def __new__(cls, *args, **kwargs):
         """
@@ -166,3 +168,14 @@ class GoogleClientFactory:
         if self._subscriber_client is None:
             self._subscriber_client = SubscriberClient()
         return self._subscriber_client
+    def create_publisher_client(self):
+        """
+        Creates a Google Cloud Pub/Sub Publisher client.
+
+        Returns:
+            google.cloud.pubsub_v1.PublisherClient: The Publisher client instance.
+        """
+
+        if self._publisher_client is None:
+            self._publisher_client = PublisherClient()
+        return self._publisher_client

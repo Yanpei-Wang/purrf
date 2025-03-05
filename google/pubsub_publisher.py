@@ -48,3 +48,26 @@ def create_subscription(project_id, topic_id, subscription_id):
 
     logging.info(f"Subscription created: {subscription_path}")
     return subscription_path
+
+def create_pubsub_topic(publisher_client, project_id, topic_id):
+    """
+    Creates a Pub/Sub topic in the specified project.
+
+    Args:
+        publisher_client (google.cloud.pubsub_v1.PublisherClient): The Publisher client instance.
+        project_id (str): The ID of your Google Cloud project.
+        topic_id (str): The ID of the topic to create.
+
+    Returns:
+        google.cloud.pubsub_v1.types.Topic: The created Topic object.
+
+    Raises:
+        ValueError: If project_id or topic_id is empty.
+    """
+
+    if not publisher_client or not project_id or not topic_id:
+        raise ValueError("Publisher_client, project_id and topic_id must be provided.")
+    topic_path = publisher_client.topic_path(project_id, topic_id)
+    topic = publisher_client.create_topic(name=topic_path)
+    logging.info(f"Topic created: {topic_path}")
+    return topic
