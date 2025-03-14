@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import logging
 from io import StringIO
 from google.chat_utils import get_chat_spaces, list_directory_all_people_ldap
@@ -31,38 +31,65 @@ class TestChatUtils(unittest.TestCase):
     def tearDown(self):
         logging.getLogger().handlers = []
 
-    def test_get_chat_spaces_success(self):
-        mock_client = Mock()
-        mock_spaces_response = {
+    @patch("google.authentication_utils.GoogleClientFactory.create_chat_client")
+    def test_get_chat_spaces_success(self, mock_client):
+        mock_spaces_response_page1 = {
             "spaces": [
                 {"name": "spaces/space1", "displayName": "Space Name 1"},
                 {"name": "spaces/space2", "displayName": "Space Name 2"},
             ],
+            "nextPageToken": "next_page",
+        }
+        mock_spaces_response_page2 = {
+            "spaces": [
+                {"name": "spaces/space3", "displayName": "Space Name 3"},
+            ],
             "nextPageToken": None,
         }
-        mock_client.spaces.return_value.list.return_value.execute.return_value = (
-            mock_spaces_response
+
+        mock_execute = (
+            mock_client.return_value.spaces.return_value.list.return_value.execute
+        )
+        mock_execute.side_effect = [
+            mock_spaces_response_page1,
+            mock_spaces_response_page2,
+        ]
+
+        result = get_chat_spaces(space_type, DEFAULT_PAGE_SIZE)
+
+        expected_result = {
+            "space1": "Space Name 1",
+            "space2": "Space Name 2",
+            "space3": "Space Name 3",
+        }
+        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            mock_client.return_value.spaces.return_value.list.call_count, 2
         )
 
-        result = get_chat_spaces(mock_client, space_type, DEFAULT_PAGE_SIZE)
-
-        expected_result = {"space1": "Space Name 1", "space2": "Space Name 2"}
-        self.assertEqual(result, expected_result)
-        mock_client.spaces.return_value.list.assert_called_once_with(
+        mock_client.return_value.spaces.return_value.list.assert_any_call(
             pageSize=DEFAULT_PAGE_SIZE,
             filter=f'space_type = "{space_type}"',
             pageToken=None,
         )
-        log_output = self.log_capture_string.getvalue()
-        self.assertIn(
-            RETRIEVED_SPACES_INFO_MSG.format(count=2, space_type=space_type), log_output
+        mock_client.return_value.spaces.return_value.list.assert_any_call(
+            pageSize=DEFAULT_PAGE_SIZE,
+            filter=f'space_type = "{space_type}"',
+            pageToken="next_page",
         )
 
-    def test_get_chat_spaces_invalid_client(self):
-        mock_client = None
+        log_output = self.log_capture_string.getvalue()
+        self.assertIn(
+            RETRIEVED_SPACES_INFO_MSG.format(count=3, space_type=space_type), log_output
+        )
+
+    @patch("google.authentication_utils.GoogleClientFactory.create_chat_client")
+    def test_get_chat_spaces_invalid_client(self, mock_client):
+        mock_client.return_value = None
 
         with self.assertRaises(ValueError) as context:
-            get_chat_spaces(mock_client, space_type, DEFAULT_PAGE_SIZE)
+            get_chat_spaces(space_type, DEFAULT_PAGE_SIZE)
+
         self.assertEqual(
             str(context.exception),
             NO_CLIENT_ERROR_MSG.format(client_name=CHAT_API_NAME),
