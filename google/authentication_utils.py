@@ -170,6 +170,7 @@ class GoogleClientFactory:
             self._subscriber_client = SubscriberClient()
             logging.info("create_subscriber_client")
         return self._subscriber_client
+
     def create_publisher_client(self):
         """
         Creates a Google Cloud Pub/Sub Publisher client.

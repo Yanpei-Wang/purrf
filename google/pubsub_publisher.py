@@ -12,6 +12,7 @@ import logging
 
 setup_logger()
 
+
 def create_pubsub_topic(project_id, topic_id):
     """
     Creates a Pub/Sub topic in the specified project.
@@ -34,6 +35,7 @@ def create_pubsub_topic(project_id, topic_id):
     topic = publisher_client.create_topic(name=topic_path)
     logging.info(f"Topic created: {topic_path}")
     return topic
+
 
 def create_subscription(project_id, topic_id, subscription_id):
     """
@@ -71,9 +73,8 @@ def create_subscription(project_id, topic_id, subscription_id):
     logging.info(f"Subscription created: {subscription_path}")
     return subscription_path
 
-def create_workspaces_subscriptions(
-    project_id, topic_id, space_id, event_types
-):
+
+def create_workspaces_subscriptions(project_id, topic_id, space_id, event_types):
     """
     Creates a Google Workspace Events subscription for a specific space.
 
@@ -113,12 +114,17 @@ def create_workspaces_subscriptions(
 def subscribe_chat(project_id, space_id, subscription_id, topic_id):
     """Subscribes to Google Chat space events using Pub/Sub and the Workspace Events API."""
 
-    event_types = ["google.workspace.chat.message.v1.created", "google.workspace.chat.message.v1.deleted"]
+    event_types = [
+        "google.workspace.chat.message.v1.created",
+        "google.workspace.chat.message.v1.deleted",
+    ]
 
     create_pubsub_topic(project_id, topic_id)
 
     create_subscription(project_id, topic_id, subscription_id)
 
-    response = create_workspaces_subscriptions(project_id, topic_id, space_id, event_types)
+    response = create_workspaces_subscriptions(
+        project_id, topic_id, space_id, event_types
+    )
 
     return response
