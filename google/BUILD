@@ -63,6 +63,7 @@ py_binary(
     deps = [
         "fetch_history_chat_message",
         ":authentication_utils",
+        ":pubsub_publisher",
         ":chat_utils",
         "//tools/global_handle_exception:exception_handler",
         "//tools/log",

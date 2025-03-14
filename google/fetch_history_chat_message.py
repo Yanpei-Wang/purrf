@@ -102,14 +102,12 @@ def fetch_history_messages():
         None.
     """
 
-    client_chat = GoogleClientFactory().create_chat_client()
-    client_people = GoogleClientFactory().create_people_client()
     messages = []
 
-    space_id_list = get_chat_spaces(client_chat, DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE)
+    space_id_list = get_chat_spaces( DEFAULT_SPACE_TYPE, DEFAULT_PAGE_SIZE)
 
     for space_id in space_id_list.keys():
-        result = fetch_messages_by_spaces_id(client_chat, space_id)
+        result = fetch_messages_by_spaces_id( space_id)
         messages.extend(result)
         logging.debug(
             FETCHED_MESSAGES_INFO_MSG.format(count=len(result), space_id=space_id)
@@ -117,7 +115,7 @@ def fetch_history_messages():
 
     logging.info(FETCHED_ALL_MESSAGES_INFO_MSG.format(count=len(messages)))
 
-    people_dict = list_directory_all_people_ldap(client_people)
+    people_dict = list_directory_all_people_ldap()
 
     stored_count = 0
     for message in messages:

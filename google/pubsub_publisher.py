@@ -12,6 +12,28 @@ import logging
 
 setup_logger()
 
+def create_pubsub_topic(project_id, topic_id):
+    """
+    Creates a Pub/Sub topic in the specified project.
+
+    Args:
+        publisher_client (google.cloud.pubsub_v1.PublisherClient): The Publisher client instance.
+        project_id (str): The ID of your Google Cloud project.
+        topic_id (str): The ID of the topic to create.
+
+    Returns:
+        google.cloud.pubsub_v1.types.Topic: The created Topic object.
+
+    Raises:
+        ValueError: If project_id or topic_id is empty.
+    """
+    publisher_client = GoogleClientFactory().create_publisher_client()
+    if not publisher_client or not project_id or not topic_id:
+        raise ValueError("Publisher_client, project_id and topic_id must be provided.")
+    topic_path = publisher_client.topic_path(project_id, topic_id)
+    topic = publisher_client.create_topic(name=topic_path)
+    logging.info(f"Topic created: {topic_path}")
+    return topic
 
 def create_subscription(project_id, topic_id, subscription_id):
     """
@@ -49,32 +71,8 @@ def create_subscription(project_id, topic_id, subscription_id):
     logging.info(f"Subscription created: {subscription_path}")
     return subscription_path
 
-def create_pubsub_topic(publisher_client, project_id, topic_id):
-    """
-    Creates a Pub/Sub topic in the specified project.
-
-    Args:
-        publisher_client (google.cloud.pubsub_v1.PublisherClient): The Publisher client instance.
-        project_id (str): The ID of your Google Cloud project.
-        topic_id (str): The ID of the topic to create.
-
-    Returns:
-        google.cloud.pubsub_v1.types.Topic: The created Topic object.
-
-    Raises:
-        ValueError: If project_id or topic_id is empty.
-    """
-
-    if not publisher_client or not project_id or not topic_id:
-        raise ValueError("Publisher_client, project_id and topic_id must be provided.")
-    topic_path = publisher_client.topic_path(project_id, topic_id)
-    topic = publisher_client.create_topic(name=topic_path)
-    logging.info(f"Topic created: {topic_path}")
-    return topic
-
-
 def create_workspaces_subscriptions(
-    project_id, topic_id, client, space_id, event_types
+    project_id, topic_id, space_id, event_types
 ):
     """
     Creates a Google Workspace Events subscription for a specific space.
@@ -92,7 +90,7 @@ def create_workspaces_subscriptions(
     Raises:
         ValueError: If any of the required parameters are missing.
     """
-
+    client = GoogleClientFactory().create_workspaceevents_client()
     if not project_id or not topic_id or not client or not space_id or not event_types:
         raise ValueError(
             "All parameters (project_id, topic_id, client, space_id, event_types) must be provided."
@@ -109,4 +107,18 @@ def create_workspaces_subscriptions(
     logging.info(
         f"Creating subscription for space {space_id} with event types {event_types} on topic {topic_id}"
     )
+    return response
+
+
+def subscribe_chat(project_id, space_id, subscription_id, topic_id):
+    """Subscribes to Google Chat space events using Pub/Sub and the Workspace Events API."""
+
+    event_types = ["google.workspace.chat.message.v1.created", "google.workspace.chat.message.v1.deleted"]
+
+    create_pubsub_topic(project_id, topic_id)
+
+    create_subscription(project_id, topic_id, subscription_id)
+
+    response = create_workspaces_subscriptions(project_id, topic_id, space_id, event_types)
+
     return response

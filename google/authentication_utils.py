@@ -168,6 +168,7 @@ class GoogleClientFactory:
 
         if self._subscriber_client is None:
             self._subscriber_client = SubscriberClient()
+            logging.info("create_subscriber_client")
         return self._subscriber_client
     def create_publisher_client(self):
         """
@@ -179,6 +180,7 @@ class GoogleClientFactory:
 
         if self._publisher_client is None:
             self._publisher_client = PublisherClient()
+            logging.info("create_publisher_client")
         return self._publisher_client
 
     def create_workspaceevents_client(self):
