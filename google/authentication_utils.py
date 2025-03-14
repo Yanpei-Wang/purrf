@@ -86,8 +86,7 @@ class GoogleClientFactory:
         if self._credentials is not None:
             return self._credentials
 
-        scopes = SCOPES_LIST
-        self._credentials, project_id = default(scopes=scopes)
+        self._credentials, project_id = default(scopes=SCOPES_LIST)
         logging.info(CREDENTIALS_SUCCESS_MSG.format(project_id=project_id))
 
         user_email = os.environ.get(USER_EMAIL)

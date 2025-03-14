@@ -1,4 +1,4 @@
-import unittest
+from unittest import TestCase, main
 from unittest.mock import Mock, patch
 import logging
 from io import StringIO
@@ -16,7 +16,7 @@ from google.constants import (
 space_type = DEFAULT_SPACE_TYPE
 
 
-class TestChatUtils(unittest.TestCase):
+class TestChatUtils(TestCase):
     def setUp(self):
         self.log_capture_string = StringIO()
         ch = logging.StreamHandler(self.log_capture_string)
@@ -152,4 +152,4 @@ class TestChatUtils(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
