@@ -12,12 +12,11 @@ from google.constants import (
     PEOPLE_API_NAME,
     PEOPLE_API_VERSION,
     CREDENTIALS_SUCCESS_MSG,
-    USING_SERVICE_ACCOUNT_CREDENTIALS_MSG,
-    NO_CREDENTIALS_ERROR_MSG,
     SERVICE_CREATED_MSG,
-    USING_USER_CREDENTIALS_MSG,
-    USING_OTHER_CREDENTIALS_MSG,
+    USING_CREDENTIALS_MSG,
+    NO_CREDENTIALS_ERROR_MSG,
 )
+from google.authentication_utils import GoogleClientFactory
 
 TEST_PROJECT_NAME = "test-project"
 TEST_BUILD_FAILED_MSG = "Build failed"
@@ -31,8 +30,6 @@ class TestExceptionHandler(unittest.TestCase):
         root_logger = logging.getLogger()
         ch.setFormatter(root_logger.handlers[0].formatter)
         logging.getLogger().addHandler(ch)
-
-        from google.authentication_utils import GoogleClientFactory
 
         GoogleClientFactory._instance = None
         GoogleClientFactory._credentials = None
@@ -48,8 +45,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_credentials = Mock(spec=UserCredentials)
         mock_auth_default.return_value = (mock_credentials, TEST_PROJECT_NAME)
 
-        from google.authentication_utils import GoogleClientFactory
-
         factory = GoogleClientFactory()
         result = factory._get_credentials()
 
@@ -59,10 +54,8 @@ class TestExceptionHandler(unittest.TestCase):
         self.assertIn(
             CREDENTIALS_SUCCESS_MSG.format(project_id=TEST_PROJECT_NAME), log_output
         )
-        self.assertIn(USING_USER_CREDENTIALS_MSG, log_output)
-        self.assertNotIn(USING_SERVICE_ACCOUNT_CREDENTIALS_MSG, log_output)
-        self.assertNotIn(
-            USING_OTHER_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
+        self.assertIn(
+            USING_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
             log_output,
         )
 
@@ -75,8 +68,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_credentials = Mock()
         mock_auth_default.return_value = (mock_credentials, TEST_PROJECT_NAME)
 
-        from google.authentication_utils import GoogleClientFactory
-
         factory = GoogleClientFactory()
         result = factory._get_credentials()
 
@@ -87,11 +78,9 @@ class TestExceptionHandler(unittest.TestCase):
             CREDENTIALS_SUCCESS_MSG.format(project_id=TEST_PROJECT_NAME), log_output
         )
         self.assertIn(
-            USING_OTHER_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
+            USING_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
             log_output,
         )
-        self.assertNotIn(USING_SERVICE_ACCOUNT_CREDENTIALS_MSG, log_output)
-        self.assertNotIn(USING_USER_CREDENTIALS_MSG, log_output)
 
         second_result = factory._get_credentials()
         self.assertEqual(second_result, mock_credentials)
@@ -101,8 +90,6 @@ class TestExceptionHandler(unittest.TestCase):
     def test_get_credentials_none(self, mock_auth_default):
         mock_auth_default.return_value = (None, None)
 
-        from google.authentication_utils import GoogleClientFactory
-
         factory = GoogleClientFactory()
         result = factory._get_credentials()
 
@@ -110,10 +97,8 @@ class TestExceptionHandler(unittest.TestCase):
         mock_auth_default.assert_called_once()
         log_output = self.log_capture_string.getvalue()
         self.assertIn(CREDENTIALS_SUCCESS_MSG.format(project_id=None), log_output)
-        self.assertNotIn(USING_SERVICE_ACCOUNT_CREDENTIALS_MSG, log_output)
-        self.assertNotIn(USING_USER_CREDENTIALS_MSG, log_output)
         self.assertNotIn(
-            USING_OTHER_CREDENTIALS_MSG.format(credentials_type="NoneType"), log_output
+            USING_CREDENTIALS_MSG.format(credentials_type="NoneType"), log_output
         )
 
     @patch("google.authentication_utils.default")
@@ -123,8 +108,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_auth_default.return_value = (mock_credentials, TEST_PROJECT_NAME)
         mock_service = Mock()
         mock_build.return_value = mock_service
-
-        from google.authentication_utils import GoogleClientFactory
 
         factory = GoogleClientFactory()
 
@@ -140,15 +123,16 @@ class TestExceptionHandler(unittest.TestCase):
         self.assertIn(
             CREDENTIALS_SUCCESS_MSG.format(project_id=TEST_PROJECT_NAME), log_output
         )
-        self.assertIn(USING_SERVICE_ACCOUNT_CREDENTIALS_MSG, log_output)
+        self.assertIn(
+            USING_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
+            log_output,
+        )
         self.assertIn(SERVICE_CREATED_MSG.format(api_name=CHAT_API_NAME), log_output)
 
     @patch("google.authentication_utils.default")
     @patch("google.authentication_utils.build")
     def test_create_client_no_credentials(self, mock_build, mock_auth_default):
         mock_auth_default.return_value = (None, None)
-
-        from google.authentication_utils import GoogleClientFactory
 
         factory = GoogleClientFactory()
 
@@ -170,8 +154,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_service = Mock()
         mock_build.return_value = mock_service
 
-        from google.authentication_utils import GoogleClientFactory
-
         factory = GoogleClientFactory()
 
         result = factory.create_chat_client()
@@ -185,7 +167,10 @@ class TestExceptionHandler(unittest.TestCase):
         self.assertIn(
             CREDENTIALS_SUCCESS_MSG.format(project_id=TEST_PROJECT_NAME), log_output
         )
-        self.assertIn(USING_SERVICE_ACCOUNT_CREDENTIALS_MSG, log_output)
+        self.assertIn(
+            USING_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
+            log_output,
+        )
         self.assertIn(SERVICE_CREATED_MSG.format(api_name=CHAT_API_NAME), log_output)
 
         second_result = factory.create_chat_client()
@@ -200,8 +185,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_service = Mock()
         mock_build.return_value = mock_service
 
-        from google.authentication_utils import GoogleClientFactory
-
         factory = GoogleClientFactory()
 
         result = factory.create_people_client()
@@ -215,7 +198,10 @@ class TestExceptionHandler(unittest.TestCase):
         self.assertIn(
             CREDENTIALS_SUCCESS_MSG.format(project_id=TEST_PROJECT_NAME), log_output
         )
-        self.assertIn(USING_SERVICE_ACCOUNT_CREDENTIALS_MSG, log_output)
+        self.assertIn(
+            USING_CREDENTIALS_MSG.format(credentials_type=type(mock_credentials)),
+            log_output,
+        )
         self.assertIn(SERVICE_CREATED_MSG.format(api_name=PEOPLE_API_NAME), log_output)
 
         second_result = factory.create_people_client()
@@ -228,8 +214,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_credentials = Mock(spec=ServiceAccountCredentials)
         mock_auth_default.return_value = (mock_credentials, TEST_PROJECT_NAME)
         mock_build.side_effect = Exception(TEST_BUILD_FAILED_MSG)
-
-        from google.authentication_utils import GoogleClientFactory
 
         factory = GoogleClientFactory()
 
@@ -253,8 +237,6 @@ class TestExceptionHandler(unittest.TestCase):
         mock_auth_default.return_value = (mock_credentials, TEST_PROJECT_NAME)
         mock_service = Mock()
         mock_build.return_value = mock_service
-
-        from google.authentication_utils import GoogleClientFactory
 
         factory1 = GoogleClientFactory()
         factory2 = GoogleClientFactory()
